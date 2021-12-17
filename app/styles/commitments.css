@@ -1,0 +1,17 @@
+#commitments {
+  max-width: 500px;
+  margin: auto;
+  padding: 1.5rem 1.5rem 3rem 1.5rem;
+  border-radius: 0.2rem;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.committer-form-group {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.committer-form-group input {
+  flex: 1;
+}
