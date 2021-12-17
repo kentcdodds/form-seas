@@ -1,14 +1,13 @@
 import * as React from "react";
 import {
   ActionFunction,
-  Form,
   json,
-  Link,
   LinksFunction,
   LoaderFunction,
   redirect,
   useActionData,
   useLoaderData,
+  useNavigate,
   useTransition,
 } from "remix";
 import { addCommitment, getCommitments } from "~/db.server";
@@ -29,8 +28,7 @@ export const loader: LoaderFunction = async () => {
 type ActionData = { error?: string };
 
 export const action: ActionFunction = async ({ request }) => {
-  const formData = await request.formData();
-  const committer = formData.get("committer");
+  const { committer } = await request.json();
   if (typeof committer !== "string" || !committer) {
     return { error: "Committer must be provided" };
   }
@@ -40,32 +38,33 @@ export const action: ActionFunction = async ({ request }) => {
 
 export default function CommitmentsRoute() {
   const data = useLoaderData<LoaderData>();
+  const navigate = useNavigate();
   const actionData = useActionData<ActionData>();
 
-  // optimistic UI code:
-  const formRef = React.useRef<HTMLFormElement>(null);
-  const transition = useTransition();
-  let submittedCommitter;
-  if (transition.submission?.action === "/commitments") {
-    submittedCommitter = transition.submission.formData.get("committer");
-  }
-  const commitments =
-    typeof submittedCommitter === "string"
-      ? [submittedCommitter, ...data.commitments]
-      : data.commitments;
-
-  // reset the form after submission
-  const isSubmissionValid = typeof submittedCommitter === "string";
-  React.useEffect(() => {
-    if (isSubmissionValid && formRef.current) {
-      formRef.current.reset();
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const committer = event.currentTarget.committer.value;
+    if (typeof committer !== "string" || !committer) {
+      return;
     }
-  }, [isSubmissionValid]);
+    const searchParams = new URLSearchParams([
+      ["data", "routes/client-only/commitments"],
+    ]);
+    fetch(`/client-only/commitments?${searchParams.toString()}`, {
+      method: "POST",
+      body: JSON.stringify({ committer }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).then(() => {
+      navigate(".", { replace: true });
+    });
+  }
 
   return (
     <div id="commitments">
       <p>Add yourself to this list</p>
-      <Form method="post" ref={formRef}>
+      <form onSubmit={handleSubmit}>
         <div className="committer-form-group">
           <label htmlFor="committer">Your name</label>
           <input id="committer" type="text" name="committer" />
@@ -76,16 +75,16 @@ export default function CommitmentsRoute() {
             {actionData.error}
           </div>
         ) : null}
-      </Form>
+      </form>
       <hr />
-      {commitments.length ? (
+      {data.commitments.length ? (
         <>
           <p>
             Here's everyone who's committed to clean up our oceans by donating
             to TeamSeas:
           </p>
           <ul>
-            {commitments.map((commitment) => (
+            {data.commitments.map((commitment) => (
               <li key={commitment}>
                 <div>{commitment}</div>
               </li>
