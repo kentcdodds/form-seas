@@ -43,7 +43,8 @@ export default function CommitmentsRoute() {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const committer = event.currentTarget.committer.value;
+    const form = event.currentTarget;
+    const committer = form.committer.value;
     if (typeof committer !== "string" || !committer) {
       return;
     }
@@ -58,6 +59,7 @@ export default function CommitmentsRoute() {
       },
     }).then(() => {
       navigate(".", { replace: true });
+      form.committer.value = "";
     });
   }
 
