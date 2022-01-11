@@ -3,7 +3,6 @@ import {
   ActionFunction,
   Form,
   json,
-  Link,
   LinksFunction,
   LoaderFunction,
   redirect,
@@ -21,11 +20,11 @@ export const links: LinksFunction = () => {
 type LoaderData = { commitments: Array<string> };
 
 export const loader: LoaderFunction = async () => {
-  const data: LoaderData = {
+  return json<LoaderData>({
     commitments: await getCommitments(),
-  };
-  return json(data);
+  });
 };
+
 type ActionData = { error?: string };
 
 export const action: ActionFunction = async ({ request }) => {
